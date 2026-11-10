@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lite Player</title>
+  <meta name="theme-color" content="#0f0f10">
+  <!-- iPhone: Add to Home Screen opens it full screen like an app -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Lite Player">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="mobile.css">
+</head>
+<body>
+  <!-- First-run setup -->
+  <section id="setup" class="setup hidden">
+    <h2>Connect your Spotify</h2>
+    <ol>
+      <li>On a computer, open <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener" style="color:var(--accent)">developer.spotify.com/dashboard</a>, open your Lite Player app and go to <b>Settings</b>.</li>
+      <li>Under <b>Redirect URIs</b> add exactly this, then save:<br><code id="redirect-uri"></code></li>
+      <li>Paste the app's <b>Client ID</b> here and log in.</li>
+    </ol>
+    <input type="text" id="client-id" placeholder="Client ID" spellcheck="false" autocomplete="off" autocapitalize="off">
+    <button class="primary" id="login-btn">Log in with Spotify</button>
+    <div class="error" id="setup-error"></div>
+    <p class="muted small">The music plays through the Spotify app on this phone: open Spotify once so it shows up as a device.</p>
+  </section>
+
+  <!-- Player -->
+  <main id="player" class="app hidden">
+    <header class="topbar">
+      <h1><span class="dot" id="device-dot" title="Spotify device"></span>Lite Player</h1>
+      <button class="icon" id="player-only-btn" data-icon="list" title="Show only the player"></button>
+      <button class="icon" id="logout-btn" data-icon="logout" title="Log out"></button>
+    </header>
+
+    <section class="now">
+      <div class="art-wrap">
+        <img class="art" id="art" alt="" title="Tap to fade the cover away" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+      </div>
+      <div class="meta">
+        <div class="names">
+          <div class="title ellipsis" id="title">Nothing playing</div>
+          <div class="artist ellipsis" id="artist">Pick something below</div>
+        </div>
+        <button class="icon" id="like-btn" data-icon="heart" title="Add to Liked Songs"></button>
+        <button class="icon" id="add-btn" data-icon="plus" title="Add to playlist"></button>
+      </div>
+      <div class="progress">
+        <span class="muted" id="pos">0:00</span>
+        <input type="range" id="seek" min="0" max="1000" value="0">
+        <span class="muted" id="dur">0:00</span>
+      </div>
+      <div class="controls">
+        <button class="icon" id="shuffle-btn" data-icon="shuffle" title="Shuffle"></button>
+        <button class="icon" id="prev-btn" data-icon="prev" title="Previous"></button>
+        <button class="icon play-btn" id="play-btn" data-icon="play" title="Play/Pause"></button>
+        <button class="icon" id="next-btn" data-icon="next" title="Next"></button>
+        <button class="icon" id="repeat-btn" data-icon="repeat" title="Repeat"></button>
+      </div>
+      <div class="volume" id="volume-row">
+        <button class="icon" id="mute-btn" data-icon="volume" title="Mute"></button>
+        <input type="range" id="volume" min="0" max="100" value="60">
+      </div>
+    </section>
+
+    <div class="reauth hidden" id="reauth">
+      <span style="flex:1">New features need one more Spotify permission.</span>
+      <button id="reauth-btn">Log in again</button>
+    </div>
+    <div class="device-bar">
+      <span class="grow ellipsis" id="device-text">Looking for your Spotify…</span>
+      <button class="small-btn" id="devices-btn">Devices</button>
+    </div>
+
+    <nav class="tabs">
+      <button data-tab="search" class="active">Search</button>
+      <button data-tab="playlists">Playlists</button>
+      <button data-tab="liked">Liked</button>
+      <button data-tab="recent">Recent</button>
+    </nav>
+    <input class="search" id="search" placeholder="What do you want to play?" spellcheck="false" autocapitalize="off">
+    <div class="list" id="list"></div>
+  </main>
+
+  <!-- Queue drawer: pull the line up to see what's coming; pulled down it shows only the next song -->
+  <div class="queue hidden" id="queue">
+    <div class="queue-handle" id="queue-handle">
+      <span class="bar"></span>
+      <div class="queue-next" id="queue-next">
+        <img alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+        <div class="txt">
+          <div class="label">Up next</div>
+          <div class="name ellipsis">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="queue-list" id="queue-list"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

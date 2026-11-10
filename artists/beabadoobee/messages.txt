@@ -1,0 +1,4 @@
+# Things the floating bubble can say when one of her songs starts.
+# One message per line. Lines starting with # are ignored.
+# {song} is replaced with the song title.
+# Paste messages from the Discord server here!

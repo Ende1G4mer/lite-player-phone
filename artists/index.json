@@ -1,0 +1,52 @@
+﻿{
+    "beabadoobee":  {
+                        "pictures":  [
+                                         "apple.jpg",
+                                         "bat-cat.jpg",
+                                         "lion.jpg"
+                                     ],
+                        "videos":  [
+
+                                   ],
+                        "songVideos":  {
+
+                                       },
+                        "messages":  true
+                    },
+    "Duster":  {
+                   "pictures":  [
+
+                                ],
+                   "videos":  [
+
+                              ],
+                   "songVideos":  {
+
+                                  },
+                   "messages":  false
+               },
+    "PinkPantheress":  {
+                           "pictures":  [
+
+                                        ],
+                           "videos":  [
+
+                                      ],
+                           "songVideos":  {
+
+                                          },
+                           "messages":  false
+                       },
+    "Stephen Sanchez":  {
+                            "pictures":  [
+
+                                         ],
+                            "videos":  [
+
+                                       ],
+                            "songVideos":  {
+
+                                           },
+                            "messages":  false
+                        }
+}
