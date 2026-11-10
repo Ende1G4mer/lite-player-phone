@@ -70,11 +70,13 @@ function artistFor(item) {
 export function createArtistMode() {
   const layer = document.createElement('div');
   layer.className = 'artist-layer';
-  layer.innerHTML = '<video class="bg-video" muted playsinline></video>'
-    + '<video class="bg-video" muted playsinline></video><div class="bg-dim"></div>';
+  layer.innerHTML = '<video class="bg-video" muted playsinline webkit-playsinline preload="auto"></video>'
+    + '<video class="bg-video" muted playsinline webkit-playsinline preload="auto"></video><div class="bg-dim"></div>';
   document.body.prepend(layer);
   const vids = [...layer.querySelectorAll('video')];
-  for (const v of vids) { v.muted = true; v.defaultMuted = true; }
+  for (const v of vids) { v.muted = true; v.defaultMuted = true; v.setAttribute('muted', ''); }
+  // Kept for the diagnostics panel (triple-tap the title)
+  const diag = { lastError: null, lastPlayError: null, canvasLookups: 0 };
 
   // Floaties sit above the UI (so they can be tapped) but let taps through elsewhere.
   const floatLayer = document.createElement('div');
@@ -116,7 +118,8 @@ export function createArtistMode() {
     v.addEventListener('ended', () => { if (v === vids[front] && !switching) nextVideo(); });
     v.addEventListener('error', () => {
       if (v !== vids[front] || !v.getAttribute('src')) return;
-      console.warn('Skipping a video that can\'t play:', v.src);
+      diag.lastError = `video error ${v.error?.code} (${v.error?.message || 'no message'}) on ${v.src.slice(0, 60)}`;
+      console.warn('Skipping a video that can\'t play:', v.src, v.error?.code, v.error?.message);
       switching = false;
       if (++errorStreak < playlist.length) nextVideo();
     });
@@ -144,6 +147,7 @@ export function createArtistMode() {
     theme = { ...DEFAULT_THEME, ...(a.theme || {}) };
     floatPool = buildFloatPool(item);
     canvasSrc = theme.canvas ? canvasMap[item.uri] || null : null;
+    diag.canvasLookups++;
 
     const base = `artists/${enc([a.folder])}`;
     const songKey = Object.keys(a.songVideos || {}).find((k) => norm(k) === norm(baseTitle(item.name)));
@@ -282,6 +286,7 @@ export function createArtistMode() {
 
   function tryPlay(v) {
     v.play().catch((e) => {
+      diag.lastPlayError = `${e?.name}: ${e?.message}`;
       // Autoplay refused (iOS Low Power Mode): ask for a tap.
       if (e?.name === 'NotAllowedError' && !hint) {
         hint = document.createElement('div');
@@ -461,5 +466,19 @@ export function createArtistMode() {
       return true;
     },
     get artist() { return artist?.folder || null; },
+    /** Everything useful for figuring out why a video isn't showing. */
+    debug() {
+      const v = vids[front];
+      return {
+        active, playing, running, hidden: document.hidden,
+        artist: artist?.folder || null, song, trackUri,
+        canvasesLoaded: Object.keys(canvasMap).length, canvasForThisSong: !!canvasSrc, canvasLookups: diag.canvasLookups,
+        playlist: playlist.map((p) => p.slice(0, 70)),
+        video: v.getAttribute('src')
+          ? { src: v.getAttribute('src').slice(0, 70), readyState: v.readyState, networkState: v.networkState, paused: v.paused, muted: v.muted, shown: v.classList.contains('show'), size: `${v.videoWidth}x${v.videoHeight}`, error: v.error ? `${v.error.code} ${v.error.message}` : null }
+          : 'no src',
+        lastError: diag.lastError, lastPlayError: diag.lastPlayError,
+      };
+    },
   };
 }

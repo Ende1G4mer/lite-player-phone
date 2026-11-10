@@ -19,6 +19,7 @@ export const icons = {
   plus: svg('M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z'),
   chevron: svg('M7.4 8.6L12 13.2l4.6-4.6L18 10l-6 6-6-6z'),
   sparkle: svg('M12 2l2.1 6.4L20.5 10.5 14.1 12.6 12 19l-2.1-6.4L3.5 10.5l6.4-2.1zM19 15l.9 2.6 2.6.9-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9z'),
+  search: svg('M10 2a8 8 0 1 0 4.9 14.3l5.4 5.4 1.4-1.4-5.4-5.4A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12z'),
   list: svg('M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h11v2H4v-2z'),
   minimize: svg('M5 11.25h14v1.5H5z'),
   maximize: svg('M6 6h12v12H6V6zm1.5 1.5v9h9v-9h-9z'),

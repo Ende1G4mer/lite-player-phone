@@ -5,6 +5,19 @@ import { icons, paintIcons } from './icons.js';
 import { createArtistMode } from './artist-mode.js';
 
 const $ = (id) => document.getElementById(id);
+const APP_VERSION = '2026-11-10b';
+// Last console warnings/errors, shown in the diagnostics panel (triple-tap the title).
+const logLines = [];
+for (const level of ['warn', 'error']) {
+  const original = console[level].bind(console);
+  console[level] = (...args) => {
+    original(...args);
+    logLines.push(`${level}: ${args.map((a) => (a instanceof Error ? a.message : typeof a === 'string' ? a : JSON.stringify(a))).join(' ')}`.slice(0, 300));
+    if (logLines.length > 30) logLines.shift();
+  };
+}
+window.addEventListener('error', (e) => console.error('uncaught', e.message, e.filename?.split('/').pop(), e.lineno));
+window.addEventListener('unhandledrejection', (e) => console.error('promise', e.reason?.message || e.reason));
 const artistMode = createArtistMode();
 window.lite = { sp, icons, onUpdate: [], artistMode };
 paintIcons();
@@ -96,6 +109,13 @@ function showQueue(items) {
     row.querySelector('.ellipsis').textContent = t.name;
     row.querySelector('.sub').textContent = artists(t);
     row.querySelector('.dur').textContent = sp.fmtTime(t.duration_ms);
+    // Spotify can't jump straight to a queued song, so this skips forward until it's reached.
+    row.onclick = () => act(async () => {
+      if (i > 15) throw new Error('Too far down the queue to skip to');
+      for (let n = 0; n <= i; n++) await sp.next();
+      queueEl.classList.remove('open');
+      toast(`Skipping to ${t.name}`);
+    });
     list.append(row);
   });
 }
@@ -205,6 +225,69 @@ $('repeat-btn').onclick = () => act(() => {
   return sp.setRepeat(order[(order.indexOf(current?.repeat_state || 'off') + 1) % 3]);
 });
 $('logout-btn').onclick = () => { if (confirm('Log out of Spotify in Lite Player?')) { sp.logout(); location.reload(); } };
+
+// ---------- Search from anywhere (magnifier at the top) ----------
+$('search-btn').onclick = () => {
+  if (popover) return closePopover();
+  const menu = openPopover('Search Spotify');
+  menu.classList.add('sheet-search');
+  const input = document.createElement('input');
+  input.className = 'search';
+  input.placeholder = 'Song, artist or album';
+  input.autocapitalize = 'off';
+  input.spellcheck = false;
+  const results = document.createElement('div');
+  results.className = 'results';
+  menu.append(input, results);
+  let timer;
+  input.oninput = () => {
+    clearTimeout(timer);
+    timer = setTimeout(async () => {
+      const q = input.value.trim();
+      if (!q) { results.replaceChildren(); return; }
+      try {
+        const res = await sp.api('/search', { query: { q, type: 'track', limit: 10 } });
+        if (popover !== menu) return;
+        renderRows(results, res.tracks.items.map((t) => ({
+          uri: t.uri, title: t.name, sub: `${artists(t)} · ${t.album.name}`, image: img(t.album.images), duration: t.duration_ms,
+          play: async () => { await sp.play({ context_uri: t.album.uri, offset: t.uri }); closePopover(); },
+        })));
+      } catch (e) { results.replaceChildren(note(e.message, 'error')); }
+    }, 350);
+  };
+  input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); };
+  setTimeout(() => input.focus(), 50);
+};
+
+// ---------- Diagnostics: triple-tap the title ----------
+let titleTaps = [];
+$('app-title').addEventListener('pointerdown', () => {
+  const now = Date.now();
+  titleTaps = titleTaps.filter((t) => now - t < 900);
+  titleTaps.push(now);
+  if (titleTaps.length >= 3) { titleTaps = []; showDiagnostics(); }
+});
+function showDiagnostics() {
+  document.querySelector('.diag')?.remove();
+  const el = document.createElement('div');
+  el.className = 'diag';
+  const close = document.createElement('button');
+  close.className = 'close';
+  close.textContent = 'Close';
+  close.onclick = () => el.remove();
+  const info = {
+    version: APP_VERSION, page: location.href, standalone: !!navigator.standalone || matchMedia('(display-mode: standalone)').matches,
+    online: navigator.onLine, screen: `${innerWidth}x${innerHeight} dpr ${devicePixelRatio}`, ua: navigator.userAgent.slice(0, 120),
+    device: current?.device ? `${current.device.name} (${current.device.type})` : 'none', playing: !!current?.is_playing,
+    track: current?.item ? `${current.item.name} · ${artists(current.item)} · ${current.item.uri}` : 'none',
+    artistMode: artistMode.debug(),
+    log: logLines.slice(-15),
+  };
+  const text = document.createElement('div');
+  text.textContent = JSON.stringify(info, null, 2);
+  el.append(close, text);
+  document.body.append(el);
+}
 
 $('seek').oninput = (e) => { seeking = true; setRange(e.target, e.target.value); };
 $('seek').onchange = (e) => {
