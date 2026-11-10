@@ -1,6 +1,6 @@
 // Service worker: keeps the app's own files cached so it opens instantly and installs to the
 // home screen. Spotify's API is never cached. VERSION is replaced on every publish.
-const VERSION = 'v20261110-144852';
+const VERSION = 'v20261110-152355';
 const CORE = [
   './', './index.html', './style.css', './mobile.css', './app.js', './spotify.js',
   './artist-mode.js', './icons.js', './manifest.webmanifest', './artists/index.json', './canvas.json',
